@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grand Slam Offer Builder — based on $100M Offers</title>
+<style>
+  :root{
+    --bg:#0e1116; --panel:#161b22; --panel2:#1c232d; --line:#2b3441;
+    --ink:#e6edf3; --muted:#9aa7b4; --accent:#f5b301; --accent2:#3fb950;
+    --red:#f85149; --blue:#58a6ff; --radius:14px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--blue)}
+  header{
+    padding:26px 20px 18px; text-align:center;
+    background:radial-gradient(1200px 300px at 50% -80px,rgba(245,179,1,.16),transparent);
+    border-bottom:1px solid var(--line);
+  }
+  header h1{margin:0 0 4px; font-size:26px; letter-spacing:.2px}
+  header h1 span{color:var(--accent)}
+  header p{margin:0; color:var(--muted); font-size:14px}
+  .wrap{max-width:900px; margin:0 auto; padding:22px 16px 90px}
+
+  /* Tabs */
+  nav.tabs{
+    position:sticky; top:0; z-index:20;
+    display:flex; gap:6px; overflow-x:auto; padding:10px 12px;
+    background:rgba(14,17,22,.92); backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line); scrollbar-width:thin;
+  }
+  nav.tabs button{
+    flex:0 0 auto; border:1px solid var(--line); background:var(--panel);
+    color:var(--muted); padding:8px 13px; border-radius:999px; cursor:pointer;
+    font-size:13px; font-weight:600; white-space:nowrap; transition:.15s;
+  }
+  nav.tabs button:hover{color:var(--ink); border-color:#3d4a5a}
+  nav.tabs button.active{background:var(--accent); color:#1a1a1a; border-color:var(--accent)}
+
+  section.step{display:none; animation:fade .25s ease}
+  section.step.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  .card{
+    background:var(--panel); border:1px solid var(--line);
+    border-radius:var(--radius); padding:20px; margin:0 0 18px;
+  }
+  .card h2{margin:0 0 4px; font-size:20px}
+  .card .lead{color:var(--muted); font-size:14px; margin:0 0 16px}
+  .quote{
+    border-left:3px solid var(--accent); background:var(--panel2);
+    padding:10px 14px; border-radius:0 8px 8px 0; color:#cfd8e0;
+    font-size:13.5px; margin:0 0 16px; font-style:italic;
+  }
+
+  label.field{display:block; margin:0 0 14px}
+  label.field .lbl{display:block; font-size:13px; font-weight:600; margin-bottom:5px}
+  label.field .hint{display:block; font-size:12px; color:var(--muted); margin-bottom:6px; font-style:normal}
+  input[type=text], input[type=number], textarea, select{
+    width:100%; background:var(--panel2); border:1px solid var(--line);
+    color:var(--ink); border-radius:10px; padding:10px 12px; font:inherit; font-size:14px;
+  }
+  textarea{min-height:70px; resize:vertical}
+  input:focus,textarea:focus,select:focus{outline:none; border-color:var(--accent)}
+
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px}
+  @media(max-width:620px){.grid2{grid-template-columns:1fr}}
+
+  /* Value equation sliders */
+  .slider-row{margin:0 0 16px}
+  .slider-row .top{display:flex; justify-content:space-between; align-items:baseline}
+  .slider-row .top b{font-size:14px}
+  .slider-row .top .val{color:var(--accent); font-weight:700}
+  .slider-row small{color:var(--muted); font-size:12px}
+  input[type=range]{width:100%; accent-color:var(--accent); margin-top:6px}
+
+  .score-box{
+    text-align:center; padding:18px; border-radius:12px; margin-top:8px;
+    background:linear-gradient(135deg,var(--panel2),#12181f); border:1px solid var(--line);
+  }
+  .score-box .num{font-size:42px; font-weight:800; line-height:1}
+  .score-box .lab{color:var(--muted); font-size:13px; margin-top:4px}
+  .score-box .msg{margin-top:10px; font-size:13.5px}
+
+  /* dynamic lists */
+  .list-item{display:flex; gap:8px; margin-bottom:8px; align-items:flex-start}
+  .list-item input{flex:1}
+  .btn{
+    border:1px solid var(--line); background:var(--panel2); color:var(--ink);
+    padding:9px 14px; border-radius:10px; cursor:pointer; font:inherit; font-size:13px; font-weight:600;
+  }
+  .btn:hover{border-color:#3d4a5a}
+  .btn.primary{background:var(--accent); color:#1a1a1a; border-color:var(--accent)}
+  .btn.ghost{background:transparent}
+  .btn.mini{padding:6px 10px; font-size:12px}
+  .btn.del{color:var(--red); padding:8px 11px}
+  .btn.del:hover{border-color:var(--red)}
+  .row-actions{display:flex; gap:8px; flex-wrap:wrap; margin-top:6px}
+
+  .pair{
+    display:grid; grid-template-columns:1fr 26px 1fr; gap:8px; align-items:center; margin-bottom:8px;
+  }
+  .pair .arrow{text-align:center; color:var(--accent); font-size:18px}
+  @media(max-width:620px){.pair{grid-template-columns:1fr; gap:4px}.pair .arrow{text-align:left}}
+
+  .pill{display:inline-block; background:var(--panel2); border:1px solid var(--line);
+    border-radius:999px; padding:3px 10px; font-size:12px; color:var(--muted); margin:2px 4px 2px 0}
+
+  .check-row{display:flex; gap:10px; align-items:flex-start; padding:8px 0; border-bottom:1px solid var(--line)}
+  .check-row:last-child{border-bottom:none}
+  .check-row input{margin-top:4px; width:18px; height:18px; accent-color:var(--accent2)}
+  .check-row .txt b{display:block; font-size:14px}
+  .check-row .txt small{color:var(--muted); font-size:12.5px}
+
+  /* summary */
+  #summaryOut{
+    background:var(--panel2); border:1px solid var(--line); border-radius:12px;
+    padding:20px; white-space:pre-wrap; font-size:14px; line-height:1.65;
+  }
+  .summary-h{color:var(--accent); font-weight:700; font-size:15px; display:block; margin:16px 0 4px}
+  .toolbar{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px}
+  .footer-nav{display:flex; justify-content:space-between; margin-top:10px}
+  .toast{
+    position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:var(--accent2); color:#0b1f10; padding:10px 18px; border-radius:10px;
+    font-weight:700; font-size:14px; opacity:0; pointer-events:none; transition:.3s; z-index:50;
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+  .tag{font-size:11px; font-weight:700; color:var(--accent); letter-spacing:1px; text-transform:uppercase}
+  .disclaimer{color:var(--muted); font-size:11.5px; text-align:center; margin-top:24px; line-height:1.5}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>The <span>Grand Slam</span> Offer Builder</h1>
+  <p>Build an offer so good people feel stupid saying no — based on Alex Hormozi's <em>$100M Offers</em></p>
+</header>
+
+<nav class="tabs" id="tabs"></nav>
+
+<div class="wrap">
+
+  <!-- 1. START -->
+  <section class="step" data-step="Start">
+    <div class="card">
+      <span class="tag">Step 1</span>
+      <h2>Who is this offer for?</h2>
+      <p class="lead">Every great offer starts with a starving crowd. Nail down the person and the problem before anything else.</p>
+      <div class="quote">"The goal is to charge as much money for your products or services as humanly possible... make them so good people feel stupid saying no."</div>
+      <label class="field"><span class="lbl">Your business / product name</span>
+        <input type="text" data-k="bizName" placeholder="e.g. LeanBody Coaching"></label>
+      <div class="grid2">
+        <label class="field"><span class="lbl">Who exactly is your dream customer?</span>
+          <span class="hint">Be specific — "busy moms over 40" beats "people who want to lose weight."</span>
+          <input type="text" data-k="avatar" placeholder="e.g. Busy professional moms over 40"></label>
+        <label class="field"><span class="lbl">What's their #1 painful problem?</span>
+          <span class="hint">The one that keeps them up at night.</span>
+          <input type="text" data-k="problem" placeholder="e.g. Can't lose the last 20 lbs despite trying"></label>
+      </div>
+      <label class="field"><span class="lbl">What do they REALLY want (the dream outcome)?</span>
+        <span class="hint">People don't buy the product — they buy the better version of themselves.</span>
+        <input type="text" data-k="dreamOutcome" placeholder="e.g. Feel confident and energetic in their own body again"></label>
+    </div>
+  </section>
+
+  <!-- 2. VALUE EQUATION -->
+  <section class="step" data-step="Value Equation">
+    <div class="card">
+      <span class="tag">Step 2</span>
+      <h2>The Value Equation</h2>
+      <p class="lead">Value is the fulcrum of your offer. Increase the top, decrease the bottom.</p>
+      <div class="quote">Value = (Dream Outcome × Perceived Likelihood of Achievement) ÷ (Time Delay × Effort &amp; Sacrifice)</div>
+
+      <div class="slider-row">
+        <div class="top"><b>⬆ Dream Outcome</b><span class="val" id="v_dream">5</span></div>
+        <small>How big &amp; desirable is the result? Higher = more valuable.</small>
+        <input type="range" min="1" max="10" data-k="ve_dream" oninput="calcValue()">
+      </div>
+      <div class="slider-row">
+        <div class="top"><b>⬆ Perceived Likelihood of Achievement</b><span class="val" id="v_like">5</span></div>
+        <small>How certain are they it'll work FOR THEM? Proof, guarantees, testimonials raise this.</small>
+        <input type="range" min="1" max="10" data-k="ve_like" oninput="calcValue()">
+      </div>
+      <div class="slider-row">
+        <div class="top"><b>⬇ Time Delay</b><span class="val" id="v_time">5</span></div>
+        <small>How long until they see results? Lower = more valuable. Deliver fast wins early.</small>
+        <input type="range" min="1" max="10" data-k="ve_time" oninput="calcValue()">
+      </div>
+      <div class="slider-row">
+        <div class="top"><b>⬇ Effort &amp; Sacrifice</b><span class="val" id="v_effort">5</span></div>
+        <small>How much work/pain for them? Lower = more valuable. Do it for them where possible.</small>
+        <input type="range" min="1" max="10" data-k="ve_effort" oninput="calcValue()">
+      </div>
+
+      <div class="score-box">
+        <div class="num" id="valueScore">—</div>
+        <div class="lab">Relative Value Score</div>
+        <div class="msg" id="valueMsg"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. PROBLEMS -->
+  <section class="step" data-step="Problems">
+    <div class="card">
+      <span class="tag">Step 3</span>
+      <h2>List Every Problem</h2>
+      <p class="lead">Between your customer and their dream outcome sits a wall of problems. List them all — every obstacle, fear, and hurdle. Each one becomes a solution you can sell or stack.</p>
+      <div class="quote">"For every problem there is a solution... to sell a solution, we must know the problem."</div>
+      <div id="problemList"></div>
+      <button class="btn" onclick="addProblem()">+ Add a problem</button>
+    </div>
+  </section>
+
+  <!-- 4. SOLUTIONS -->
+  <section class="step" data-step="Solutions">
+    <div class="card">
+      <span class="tag">Step 4</span>
+      <h2>Turn Problems into Solutions</h2>
+      <p class="lead">Flip each problem into the thing that solves it. Phrase solutions as "How to..." outcomes. These are the building blocks of your offer stack.</p>
+      <button class="btn ghost mini" onclick="pullProblems()" style="margin-bottom:14px">↺ Pull in problems from Step 3</button>
+      <div id="solutionList"></div>
+      <button class="btn" onclick="addSolution('','')">+ Add a solution</button>
+    </div>
+  </section>
+
+  <!-- 5. TRIM & STACK -->
+  <section class="step" data-step="Trim &amp; Stack">
+    <div class="card">
+      <span class="tag">Step 5</span>
+      <h2>Trim &amp; Stack the Offer</h2>
+      <p class="lead">You can't include everything. Keep the solutions with <b>high value to the customer</b> and <b>low cost to you</b>. Trim the rest. What survives becomes your Grand Slam stack.</p>
+      <div class="quote">"The goal is to find offers with high value and low cost to fulfill — attractive to customers, cheap for you."</div>
+      <p style="font-size:13px;color:var(--muted)">Load your solutions and rate each. The app highlights your keepers.</p>
+      <button class="btn ghost mini" onclick="loadStack()" style="margin-bottom:14px">↺ Load solutions from Step 4</button>
+      <div id="stackList"></div>
+    </div>
+  </section>
+
+  <!-- 6. PRICING -->
+  <section class="step" data-step="Pricing">
+    <div class="card">
+      <span class="tag">Step 6</span>
+      <h2>Price with Confidence</h2>
+      <p class="lead">Charge premium prices. High prices force high value and attract better clients. Add up what the stack is worth, then set your price far below that stacked value.</p>
+      <div class="quote">"Charge the most you possibly can... higher prices create higher perceived value — and higher client results."</div>
+      <label class="field"><span class="lbl">Total stacked value (add up what each piece is worth to them)</span>
+        <span class="hint">Tip: from Step 5, sum a fair standalone price for every keeper.</span>
+        <input type="number" data-k="stackValue" placeholder="e.g. 8000" oninput="calcPrice()"></label>
+      <label class="field"><span class="lbl">Your actual offer price</span>
+        <input type="number" data-k="offerPrice" placeholder="e.g. 2000" oninput="calcPrice()"></label>
+      <div class="score-box">
+        <div class="num" id="priceRatio">—</div>
+        <div class="lab">Value-to-Price Ratio (aim for 10× or more)</div>
+        <div class="msg" id="priceMsg"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. BONUSES -->
+  <section class="step" data-step="Bonuses">
+    <div class="card">
+      <span class="tag">Step 7</span>
+      <h2>Enhance with Bonuses</h2>
+      <p class="lead">A single offer at $1,000 is weaker than a core offer plus stacked bonuses that total the same. Bonuses solve the next problem, address objections, and make the deal feel overwhelming.</p>
+      <div class="quote">"The main offer + bonuses that each independently solve a problem &gt;&gt; one lumped offer."</div>
+      <div id="bonusList"></div>
+      <button class="btn" onclick="addBonus()">+ Add a bonus</button>
+    </div>
+  </section>
+
+  <!-- 8. GUARANTEES -->
+  <section class="step" data-step="Guarantee">
+    <div class="card">
+      <span class="tag">Step 8</span>
+      <h2>Reverse the Risk (Guarantee)</h2>
+      <p class="lead">A strong guarantee removes the fear of buying. Pick a type and write yours. Boldness sells — a specific, gutsy guarantee out-converts a vague one.</p>
+      <div class="quote">"A guarantee is a formal assurance... reversing risk is one of the most powerful ways to increase conversion."</div>
+      <label class="field"><span class="lbl">Guarantee type</span>
+        <select data-k="guaranteeType">
+          <option value="">— choose —</option>
+          <option>Unconditional (no-questions-asked refund)</option>
+          <option>Conditional ("do the work, get the result or your money back")</option>
+          <option>Anti-guarantee ("all sales final" — for premium/exclusive)</option>
+          <option>Implied (performance / success-based pay)</option>
+        </select></label>
+      <label class="field"><span class="lbl">Write your guarantee in one bold sentence</span>
+        <textarea data-k="guaranteeText" placeholder="e.g. Follow the plan for 90 days — if you don't lose 20 lbs, I'll refund you AND pay you $500 for your time."></textarea></label>
+    </div>
+  </section>
+
+  <!-- 9. SCARCITY & URGENCY -->
+  <section class="step" data-step="Scarcity &amp; Urgency">
+    <div class="card">
+      <span class="tag">Step 9</span>
+      <h2>Scarcity &amp; Urgency</h2>
+      <p class="lead">Value is tied to supply and demand. Scarcity (limited quantity) and urgency (limited time) push people to act now instead of "later" — which usually means never.</p>
+      <div class="quote">"Scarcity is a function of quantity. Urgency is a function of time."</div>
+      <p style="font-size:13px;font-weight:600;margin-bottom:6px">Check the levers you'll use:</p>
+      <div id="scarcityChecks"></div>
+      <label class="field" style="margin-top:14px"><span class="lbl">Your scarcity/urgency plan in your own words</span>
+        <textarea data-k="scarcityText" placeholder="e.g. Only 10 coaching spots per month. Enrollment closes Friday, price rises $500 next cohort."></textarea></label>
+    </div>
+  </section>
+
+  <!-- 10. NAMING -->
+  <section class="step" data-step="Name (MAGIC)">
+    <div class="card">
+      <span class="tag">Step 10</span>
+      <h2>Name It — the M-A-G-I-C Formula</h2>
+      <p class="lead">A great name gets attention and communicates the offer. Fill each piece, then assemble your headline name below.</p>
+      <label class="field"><span class="lbl">M — Magnetic "Reason Why"</span>
+        <span class="hint">Why now? A holiday, event, or occasion.</span>
+        <input type="text" data-k="mg_m" placeholder="e.g. Summer, New Year, Free"></label>
+      <label class="field"><span class="lbl">A — Announce the Avatar</span>
+        <span class="hint">Who it's for.</span>
+        <input type="text" data-k="mg_a" placeholder="e.g. Busy Moms"></label>
+      <label class="field"><span class="lbl">G — Give a Goal</span>
+        <span class="hint">The dream outcome.</span>
+        <input type="text" data-k="mg_g" placeholder="e.g. Drop 20 lbs"></label>
+      <label class="field"><span class="lbl">I — Indicate a Time Interval</span>
+        <span class="hint">How long it takes.</span>
+        <input type="text" data-k="mg_i" placeholder="e.g. in 6 Weeks"></label>
+      <label class="field"><span class="lbl">C — Container Word</span>
+        <span class="hint">Challenge, Blueprint, Bootcamp, System, Accelerator, Masterclass...</span>
+        <input type="text" data-k="mg_c" placeholder="e.g. Challenge"></label>
+      <div class="score-box">
+        <div class="lab">Your offer name</div>
+        <div class="num" id="magicName" style="font-size:24px;margin-top:6px">—</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 11. SUMMARY -->
+  <section class="step" data-step="Your Offer">
+    <div class="card">
+      <span class="tag">Final</span>
+      <h2>Your Grand Slam Offer</h2>
+      <p class="lead">Here's everything assembled. Copy it, print it, or download it — then go sell it.</p>
+      <div class="toolbar">
+        <button class="btn primary" onclick="buildSummary()">↻ Refresh</button>
+        <button class="btn" onclick="copySummary()">📋 Copy</button>
+        <button class="btn" onclick="downloadSummary()">⬇ Download .txt</button>
+        <button class="btn" onclick="window.print()">🖨 Print</button>
+        <button class="btn ghost del" onclick="resetAll()">Reset all</button>
+      </div>
+      <div id="summaryOut">Click “Refresh” to assemble your offer.</div>
+      <p class="disclaimer">This is an independent educational tool inspired by the frameworks in Alex Hormozi's book <em>$100M Offers</em>. It is not affiliated with, endorsed by, or created by Alex Hormozi or Acquisition.com. Your data is saved only in this browser on your device.</p>
+    </div>
+  </section>
+
+  <div class="footer-nav">
+    <button class="btn ghost" id="prevBtn" onclick="move(-1)">← Back</button>
+    <button class="btn primary" id="nextBtn" onclick="move(1)">Next →</button>
+  </div>
+</div>
+
+<div class="toast" id="toast">Saved</div>
+
+<script>
+const KEY = 'gsoBuilder_v1';
+let data = {};
+const steps = Array.from(document.querySelectorAll('section.step'));
+let current = 0;
+
+/* ---------- persistence ---------- */
+function load(){ try{ data = JSON.parse(localStorage.getItem(KEY)) || {}; }catch(e){ data = {}; } }
+function save(){ localStorage.setItem(KEY, JSON.stringify(data)); }
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg||'Saved'; t.classList.add('show'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),1200); }
+
+/* ---------- tabs ---------- */
+const tabsEl = document.getElementById('tabs');
+steps.forEach((s,i)=>{
+  const b=document.createElement('button');
+  b.innerHTML=(i+1)+'. '+s.dataset.step;
+  b.onclick=()=>goto(i);
+  tabsEl.appendChild(b);
+});
+function goto(i){
+  current=Math.max(0,Math.min(steps.length-1,i));
+  steps.forEach((s,idx)=>s.classList.toggle('active',idx===current));
+  Array.from(tabsEl.children).forEach((b,idx)=>b.classList.toggle('active',idx===current));
+  document.getElementById('prevBtn').style.visibility = current===0?'hidden':'visible';
+  document.getElementById('nextBtn').textContent = current===steps.length-1?'Done ✓':'Next →';
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(steps[current].dataset.step==='Your Offer') buildSummary();
+}
+function move(d){ goto(current+d); }
+
+/* ---------- bind simple fields ---------- */
+function bindFields(){
+  document.querySelectorAll('[data-k]').forEach(el=>{
+    const k=el.dataset.k;
+    if(el.type==='range'){ el.value = data[k]!=null?data[k]:5; }
+    else if(el.tagName==='SELECT'){ el.value = data[k]||''; }
+    else { el.value = data[k]||''; }
+    const ev = (el.type==='range')?'input':'input';
+    el.addEventListener(ev,()=>{
+      data[k] = el.value; save();
+      if(k.startsWith('ve_')) calcValue();
+      if(k.startsWith('mg_')) calcMagic();
+    });
+    el.addEventListener('change',()=>{ data[k]=el.value; save(); });
+  });
+}
+
+/* ---------- value equation ---------- */
+function calcValue(){
+  const g=n=>parseFloat((document.querySelector('[data-k="'+n+'"]')||{}).value)||5;
+  const dream=g('ve_dream'), like=g('ve_like'), time=g('ve_time'), effort=g('ve_effort');
+  document.getElementById('v_dream').textContent=dream;
+  document.getElementById('v_like').textContent=like;
+  document.getElementById('v_time').textContent=time;
+  document.getElementById('v_effort').textContent=effort;
+  const score=(dream*like)/(time*effort);
+  const norm=Math.min(100,Math.round(score/1*10)); // score max =100/1=100
+  document.getElementById('valueScore').textContent = score.toFixed(1);
+  let msg;
+  if(score>=25) msg='🔥 Overwhelming value. This is Grand Slam territory.';
+  else if(score>=9) msg='💪 Strong offer. Push dream outcome & likelihood higher, cut time & effort more.';
+  else if(score>=3) msg='⚠️ Decent, but beatable. Focus on faster results and less effort for them.';
+  else msg='❌ Weak. Raise the dream & proof, or slash the time delay and effort.';
+  document.getElementById('valueMsg').textContent=msg;
+  data.valueScore=score.toFixed(1); save();
+}
+
+/* ---------- dynamic lists (problems / solutions / bonuses) ---------- */
+function makeRow(container, val, ph, key){
+  const wrap=document.createElement('div'); wrap.className='list-item';
+  const inp=document.createElement('input'); inp.type='text'; inp.value=val||''; inp.placeholder=ph;
+  const del=document.createElement('button'); del.className='btn del mini'; del.textContent='✕';
+  inp.addEventListener('input',()=>persistList(container,key));
+  del.onclick=()=>{ wrap.remove(); persistList(container,key); };
+  wrap.appendChild(inp); wrap.appendChild(del);
+  container.appendChild(wrap);
+  return inp;
+}
+function persistList(container,key){
+  data[key]=Array.from(container.querySelectorAll('input')).map(i=>i.value).filter(v=>v.trim()!=='');
+  save();
+}
+
+/* problems */
+const pList=document.getElementById('problemList');
+function addProblem(v){ makeRow(pList,v,'e.g. Don\'t know what to eat',''+'problems'); persistList(pList,'problems'); }
+function renderProblems(){ pList.innerHTML=''; (data.problems||[]).forEach(p=>makeRow(pList,p,'problem','problems')); if(!(data.problems||[]).length){addProblem();addProblem();} }
+
+/* solutions: pairs problem->solution */
+const sList=document.getElementById('solutionList');
+function addSolution(prob,sol){
+  const wrap=document.createElement('div'); wrap.className='pair';
+  const p=document.createElement('input'); p.type='text'; p.placeholder='Problem'; p.value=prob||'';
+  const a=document.createElement('span'); a.className='arrow'; a.textContent='➜';
+  const s=document.createElement('input'); s.type='text'; s.placeholder='Solution (How to...)'; s.value=sol||'';
+  [p,s].forEach(i=>i.addEventListener('input',persistSolutions));
+  const del=document.createElement('button'); del.className='btn del mini'; del.textContent='✕'; del.style.gridColumn='1/-1';
+  del.onclick=()=>{wrap.remove();persistSolutions();};
+  wrap.appendChild(p);wrap.appendChild(a);wrap.appendChild(s);wrap.appendChild(del);
+  sList.appendChild(wrap);
+}
+function persistSolutions(){
+  data.solutions=Array.from(sList.querySelectorAll('.pair')).map(w=>{
+    const [p,s]=w.querySelectorAll('input'); return {p:p.value,s:s.value};
+  }).filter(o=>o.p.trim()||o.s.trim());
+  save();
+}
+function renderSolutions(){ sList.innerHTML=''; (data.solutions||[]).forEach(o=>addSolution(o.p,o.s)); if(!(data.solutions||[]).length) addSolution('',''); }
+function pullProblems(){
+  (data.problems||[]).forEach(p=>{
+    const exists=Array.from(sList.querySelectorAll('.pair input')).some(i=>i.value===p);
+    if(!exists) addSolution(p,'');
+  });
+  persistSolutions(); toast('Problems pulled in');
+}
+
+/* ---------- trim & stack ---------- */
+const stackList=document.getElementById('stackList');
+function loadStack(){
+  stackList.innerHTML='';
+  const sols=(data.solutions||[]).map(o=>o.s).filter(v=>v.trim());
+  data.stack=data.stack||{};
+  if(!sols.length){ stackList.innerHTML='<p style="color:var(--muted);font-size:13px">Add some solutions in Step 4 first.</p>'; return; }
+  sols.forEach((sol,i)=>{
+    const saved=data.stack[sol]||{value:5,cost:5};
+    const row=document.createElement('div'); row.className='card'; row.style.padding='12px'; row.style.margin='0 0 10px';
+    row.innerHTML=`<b style="font-size:14px">${escapeHtml(sol)}</b>
+      <div class="grid2" style="margin-top:8px">
+        <div><small style="color:var(--muted)">Value to customer</small>
+          <input type="range" min="1" max="10" value="${saved.value}" data-sv="${i}"></div>
+        <div><small style="color:var(--muted)">Cost to you</small>
+          <input type="range" min="1" max="10" value="${saved.cost}" data-sc="${i}"></div>
+      </div>
+      <div class="verdict" style="margin-top:6px;font-size:13px;font-weight:700"></div>`;
+    stackList.appendChild(row);
+    const vv=row.querySelector('[data-sv]'), cc=row.querySelector('[data-sc]'), verdict=row.querySelector('.verdict');
+    function upd(){
+      const val=+vv.value, cost=+cc.value;
+      data.stack[sol]={value:val,cost:cost}; save();
+      if(val>=6 && cost<=5){ verdict.textContent='✅ KEEP — high value, low cost'; verdict.style.color='var(--accent2)'; }
+      else if(val<=4 && cost>=6){ verdict.textContent='✂️ TRIM — low value, high cost'; verdict.style.color='var(--red)'; }
+      else { verdict.textContent='🤔 Maybe — review'; verdict.style.color='var(--accent)'; }
+    }
+    vv.oninput=upd; cc.oninput=upd; upd();
+  });
+}
+
+/* ---------- pricing ---------- */
+function calcPrice(){
+  const sv=parseFloat((document.querySelector('[data-k="stackValue"]')||{}).value)||0;
+  const op=parseFloat((document.querySelector('[data-k="offerPrice"]')||{}).value)||0;
+  const el=document.getElementById('priceRatio'), msg=document.getElementById('priceMsg');
+  if(!op){ el.textContent='—'; msg.textContent=''; return; }
+  const ratio=sv/op;
+  el.textContent=ratio.toFixed(1)+'×';
+  if(ratio>=10) msg.textContent='🔥 Irresistible. The value dwarfs the price.';
+  else if(ratio>=5) msg.textContent='💪 Strong. You could add bonuses or raise stacked value toward 10×.';
+  else if(ratio>=2) msg.textContent='⚠️ Okay. Stack more value or justify the price with proof & bonuses.';
+  else msg.textContent='❌ The price feels high vs. value. Add bonuses or lower the price — or raise real value.';
+}
+
+/* ---------- bonuses ---------- */
+const bList=document.getElementById('bonusList');
+function addBonus(v){ makeRow(bList,v,'e.g. Done-for-you meal plan ($297 value)','bonuses'); persistList(bList,'bonuses'); }
+function renderBonuses(){ bList.innerHTML=''; (data.bonuses||[]).forEach(b=>makeRow(bList,b,'bonus','bonuses')); if(!(data.bonuses||[]).length){addBonus();} }
+
+/* ---------- scarcity checklist ---------- */
+const scOpts=[
+  ['Limited seats / spots','Only take X clients per period'],
+  ['Cohort / enrollment window','Doors open then close on a date'],
+  ['Rising price','Price goes up next round or with each sale'],
+  ['Fast-action bonus','Extra bonus for the first X buyers / next 48h'],
+  ['Limited edition / one-time','Never offered again at this price'],
+  ['Deadline / countdown','A hard date the offer expires']
+];
+const scEl=document.getElementById('scarcityChecks');
+function renderScarcity(){
+  scEl.innerHTML='';
+  data.scarcity=data.scarcity||[];
+  scOpts.forEach(([t,d])=>{
+    const row=document.createElement('label'); row.className='check-row';
+    const c=document.createElement('input'); c.type='checkbox'; c.checked=data.scarcity.includes(t);
+    c.onchange=()=>{ if(c.checked)data.scarcity.push(t); else data.scarcity=data.scarcity.filter(x=>x!==t); save(); };
+    const tx=document.createElement('div'); tx.className='txt'; tx.innerHTML=`<b>${t}</b><small>${d}</small>`;
+    row.appendChild(c); row.appendChild(tx); scEl.appendChild(row);
+  });
+}
+
+/* ---------- magic name ---------- */
+function calcMagic(){
+  const g=n=>((document.querySelector('[data-k="'+n+'"]')||{}).value||'').trim();
+  const parts=[g('mg_m'),g('mg_a'),g('mg_g'),g('mg_i'),g('mg_c')].filter(Boolean);
+  document.getElementById('magicName').textContent = parts.length?parts.join(' '):'—';
+}
+
+/* ---------- summary ---------- */
+function escapeHtml(s){ return (s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+function buildSummary(){
+  const g=k=>data[k]||'';
+  let out='';
+  const h=t=>`<span class="summary-h">${t}</span>`;
+  out+=h('🎯 THE OFFER');
+  out+=`${g('mg_m')||''} ${g('mg_a')||''} ${g('mg_g')||''} ${g('mg_i')||''} ${g('mg_c')||''}`.trim()||'(name your offer in Step 10)';
+  out+='\n\n'+h('👤 WHO IT\'S FOR');
+  out+=`${g('avatar')||'—'}\nBiggest problem: ${g('problem')||'—'}\nThey really want: ${g('dreamOutcome')||'—'}`;
+
+  out+='\n\n'+h('📊 VALUE EQUATION SCORE');
+  out+=`${g('valueScore')||'—'}  (Dream×Likelihood ÷ Time×Effort)`;
+
+  if((data.solutions||[]).length){
+    out+='\n\n'+h('🧱 THE STACK (problems → solutions)');
+    data.solutions.forEach(o=>{ if(o.s||o.p) out+=`\n• ${o.p||'?'} → ${o.s||'?'}`; });
+  }
+  const keepers=Object.entries(data.stack||{}).filter(([k,v])=>v.value>=6&&v.cost<=5).map(([k])=>k);
+  if(keepers.length){ out+='\n\n'+h('⭐ KEEPERS (high value / low cost)'); keepers.forEach(k=>out+=`\n✓ ${k}`); }
+
+  if((data.bonuses||[]).length){
+    out+='\n\n'+h('🎁 BONUSES');
+    data.bonuses.forEach(b=>out+=`\n+ ${b}`);
+  }
+
+  out+='\n\n'+h('💰 PRICE');
+  const sv=g('stackValue'),op=g('offerPrice');
+  out+=`Stacked value: ${sv?'$'+Number(sv).toLocaleString():'—'}\nYour price: ${op?'$'+Number(op).toLocaleString():'—'}`;
+  if(sv&&op) out+=`\nValue-to-price: ${(sv/op).toFixed(1)}×`;
+
+  out+='\n\n'+h('🛡 GUARANTEE');
+  out+=`${g('guaranteeType')?'['+g('guaranteeType')+']\n':''}${g('guaranteeText')||'—'}`;
+
+  out+='\n\n'+h('⏳ SCARCITY & URGENCY');
+  const sc=(data.scarcity||[]);
+  out+=(sc.length?sc.map(x=>'• '+x).join('\n'):'—');
+  if(g('scarcityText')) out+=`\n${g('scarcityText')}`;
+
+  document.getElementById('summaryOut').innerHTML=out;
+}
+function summaryText(){
+  return document.getElementById('summaryOut').innerText;
+}
+function copySummary(){
+  navigator.clipboard.writeText(summaryText()).then(()=>toast('Copied to clipboard')).catch(()=>toast('Copy failed'));
+}
+function downloadSummary(){
+  const blob=new Blob([summaryText()],{type:'text/plain'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=(data.mg_c?'GrandSlamOffer':'MyOffer')+'.txt';
+  a.click(); toast('Downloaded');
+}
+function resetAll(){
+  if(confirm('Erase everything and start over? This cannot be undone.')){
+    localStorage.removeItem(KEY); data={}; location.reload();
+  }
+}
+
+/* ---------- init ---------- */
+load();
+bindFields();
+renderProblems();
+renderSolutions();
+renderBonuses();
+renderScarcity();
+calcValue();
+calcMagic();
+calcPrice();
+goto(0);
+</script>
+</body>
+</html>
