@@ -134,6 +134,15 @@
   .toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
   .tag{font-size:11px; font-weight:700; color:var(--accent); letter-spacing:1px; text-transform:uppercase}
   .disclaimer{color:var(--muted); font-size:11.5px; text-align:center; margin-top:24px; line-height:1.5}
+
+  /* guarantee library */
+  .glib-cats{display:flex; flex-wrap:wrap; gap:6px; margin:4px 0}
+  .gcard{background:var(--panel2); border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin:0 0 10px}
+  .gcard-top{display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap}
+  .gcard-top b{font-size:14.5px}
+  .gbadge{font-size:10.5px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; color:var(--accent); border:1px solid var(--line); border-radius:999px; padding:2px 8px; white-space:nowrap}
+  .gdesc{font-size:12.5px; color:var(--muted); margin:6px 0}
+  .gex{font-size:13px; color:#cfd8e0; font-style:italic; border-left:2px solid var(--accent); padding-left:10px; margin:0 0 10px}
 </style>
 </head>
 <body>
@@ -281,18 +290,19 @@
     <div class="card">
       <span class="tag">Step 8</span>
       <h2>Reverse the Risk (Guarantee)</h2>
-      <p class="lead">A strong guarantee removes the fear of buying. Pick a type and write yours. Boldness sells — a specific, gutsy guarantee out-converts a vague one.</p>
-      <div class="quote">"A guarantee is a formal assurance... reversing risk is one of the most powerful ways to increase conversion."</div>
-      <label class="field"><span class="lbl">Guarantee type</span>
-        <select data-k="guaranteeType">
-          <option value="">— choose —</option>
-          <option>Unconditional (no-questions-asked refund)</option>
-          <option>Conditional ("do the work, get the result or your money back")</option>
-          <option>Anti-guarantee ("all sales final" — for premium/exclusive)</option>
-          <option>Implied (performance / success-based pay)</option>
-        </select></label>
-      <label class="field"><span class="lbl">Write your guarantee in one bold sentence</span>
-        <textarea data-k="guaranteeText" placeholder="e.g. Follow the plan for 90 days — if you don't lose 20 lbs, I'll refund you AND pay you $500 for your time."></textarea></label>
+      <p class="lead">A strong guarantee removes the fear of buying — one of the single biggest levers on conversion. Browse Hormozi's full guarantee playbook below, filter by type, and click <b>Use this</b> to drop a template into your offer. You can stack more than one.</p>
+      <div class="quote">"A guarantee is a formal assurance... reversing risk is one of the most powerful ways to increase conversion." — the four families: Unconditional, Conditional, Anti-Guarantee, and Implied/Performance.</div>
+
+      <div class="glib-cats" id="gFilter"></div>
+      <p style="font-size:12px;color:var(--muted);margin:4px 0 10px" id="gCount"></p>
+      <div id="guaranteeLib"></div>
+
+      <label class="field" style="margin-top:16px"><span class="lbl">Your guarantee — edit freely, stack as many as you like</span>
+        <span class="hint">The boldest, most specific guarantee wins. A conditional "do the work or get 2× back" often out-converts a plain refund. Replace [RESULT], [TIME], etc. with your specifics.</span>
+        <textarea data-k="guaranteeText" id="gText" style="min-height:120px" placeholder="Click “Use this” on any guarantee above, or write your own here…"></textarea></label>
+      <div class="row-actions">
+        <button class="btn ghost mini" onclick="clearGuarantee()">Clear guarantee box</button>
+      </div>
     </div>
   </section>
 
@@ -552,6 +562,95 @@ function renderScarcity(){
   });
 }
 
+/* ---------- guarantee library (from Alex Hormozi's $100M Offers) ---------- */
+const GUARANTEES=[
+ {cat:'Unconditional', name:'No-Questions-Asked Refund', desc:'The classic. Full refund within a set window, zero hoops. Maximum trust — highest refund risk.',
+  ex:"If you're not thrilled for ANY reason, email us within 30 days and get 100% of your money back — no questions asked."},
+ {cat:'Unconditional', name:'Satisfaction Guarantee', desc:'Refund tied simply to how they feel about it.',
+  ex:"Try it. If you don't absolutely love it, we'll refund every penny — no hard feelings."},
+ {cat:'Unconditional', name:'Free Trial / Try Before You Buy', desc:'They experience the value first and pay later. Removes purchase risk entirely.',
+  ex:"Use the entire program free for 14 days. You're only charged if you decide to keep going."},
+ {cat:'Unconditional', name:'Double-Your-Money-Back', desc:'A gutsy unconditional promise that signals extreme confidence.',
+  ex:"If you're not blown away, I'll refund DOUBLE what you paid. That's how sure I am this works."},
+
+ {cat:'Conditional', name:'Outsized Refund Guarantee', desc:'Refund MORE than they paid — if they did the work and still failed.',
+  ex:"Do the 3 things I ask each week. If you still don't hit [RESULT] in [TIME], I'll refund 2× your investment."},
+ {cat:'Conditional', name:'“We Keep Working” Service Guarantee', desc:'You keep serving them for free until they get the result.',
+  ex:"If you don't reach [RESULT] by [TIME], we'll keep working with you for free until you do."},
+ {cat:'Conditional', name:'Modified Service Guarantee', desc:'Instead of cash back, they get more free service or time.',
+  ex:"Don't get [RESULT]? You get 3 more months of coaching free — on the house."},
+ {cat:'Conditional', name:'Credit-Based Guarantee', desc:'The refund becomes credit toward anything else you offer. Keeps the relationship.',
+  ex:"If it's not the right fit, we'll credit 100% of what you paid toward any other program we offer."},
+ {cat:'Conditional', name:'Personal / 1-on-1 Guarantee', desc:'You personally step in until they win. Powerful for high-ticket.',
+  ex:"If you don't get [RESULT], I'll personally work with you one-on-one until you do — at no extra cost."},
+ {cat:'Conditional', name:'Wage-Payment Guarantee', desc:'Pay them for their time if it fails. Extremely bold trust signal.',
+  ex:"If you show up and don't find this worth your time, I'll pay you [YOUR HOURLY RATE] for every hour you spent."},
+ {cat:'Conditional', name:'Release / No-Contract Guarantee', desc:'Let them walk away anytime with no penalty. Removes commitment fear.',
+  ex:"No long-term contract. Cancel anytime, for any reason, with zero penalties."},
+ {cat:'Conditional', name:'Delayed Second Payment', desc:"They don't pay again until they get the first result.",
+  ex:"You won't owe the second payment until you've achieved your first [RESULT]."},
+ {cat:'Conditional', name:'First-Outcome Guarantee', desc:'You cover their ancillary costs until they reach the first milestone.',
+  ex:"I'll cover your [ad spend / tools / fees] until you land your first [RESULT]."},
+ {cat:'Conditional', name:'Travel & Expenses Guarantee', desc:'Great for events — you refund their travel if it wasn\'t worth it.',
+  ex:"Attend the event. If it's not worth every penny, I'll refund your ticket AND pay for your flight and hotel."},
+ {cat:'Conditional', name:'“Beat It or It’s Free”', desc:"If you can't out-perform their current situation, they pay nothing.",
+  ex:"If we can't beat your current [METRIC] within [TIME], you don't pay a cent."},
+ {cat:'Conditional', name:'Result-in-Timeframe Guarantee', desc:'Specific result, specific deadline, or money back.',
+  ex:"[RESULT] in [TIME] — or your money back. Simple."},
+ {cat:'Conditional', name:'Keep-the-Product Refund', desc:'They get refunded AND keep the bonuses. Feels overwhelmingly generous.',
+  ex:"If it's not for you, keep all the bonuses AND get a full refund anyway."},
+
+ {cat:'Anti-Guarantee', name:'All Sales Final', desc:'No guarantee at all — on purpose. Signals exclusivity and filters for the committed. Use only for premium/scarce offers.',
+  ex:"Due to the nature of this offer, all sales are final. This is only for people who are 100% committed."},
+
+ {cat:'Implied', name:'Performance Guarantee (Pay on Results)', desc:'They only pay once the result is delivered. Aligns incentives completely.',
+  ex:"You only pay [FEE] once you've hit [RESULT]. No result, no fee."},
+ {cat:'Implied', name:'Revenue / Profit Share', desc:"You take a cut of what you generate. If they don't win, you don't get paid.",
+  ex:"Instead of a big upfront fee, I take [X]% of the revenue I help you generate — I only win when you win."},
+ {cat:'Implied', name:'Milestone Ratchet', desc:'Your pay is tied to hitting agreed milestones.',
+  ex:"My fee scales with your results: I earn more only as we hit [MILESTONE 1], [MILESTONE 2], and beyond."},
+ {cat:'Implied', name:'Base + Performance Trigger', desc:'Low base fee plus a bonus that only triggers on a KPI.',
+  ex:"A small base fee, plus a bonus that's only paid when we hit [KPI]. Skin in the game on both sides."},
+];
+const G_CATS=['All','Unconditional','Conditional','Anti-Guarantee','Implied'];
+let gActiveCat='All';
+const gLibEl=document.getElementById('guaranteeLib');
+const gFilterEl=document.getElementById('gFilter');
+const gCountEl=document.getElementById('gCount');
+function catLabel(c){ return c==='Implied'?'Implied / Performance':c; }
+function renderGFilter(){
+  gFilterEl.innerHTML='';
+  G_CATS.forEach(c=>{
+    const b=document.createElement('button');
+    b.className='btn mini '+(c===gActiveCat?'primary':'ghost');
+    b.textContent=catLabel(c);
+    b.onclick=()=>{ gActiveCat=c; renderGFilter(); renderGLib(); };
+    gFilterEl.appendChild(b);
+  });
+}
+function renderGLib(){
+  const list=GUARANTEES.filter(x=>gActiveCat==='All'||x.cat===gActiveCat);
+  gCountEl.textContent=list.length+' guarantee'+(list.length!==1?'s':'')+" — from Alex Hormozi's $100M Offers";
+  gLibEl.innerHTML='';
+  list.forEach(x=>{
+    const card=document.createElement('div'); card.className='gcard';
+    card.innerHTML='<div class="gcard-top"><b>'+escapeHtml(x.name)+'</b><span class="gbadge">'+escapeHtml(catLabel(x.cat))+'</span></div>'+
+      '<p class="gdesc">'+escapeHtml(x.desc)+'</p>'+
+      '<p class="gex">“'+escapeHtml(x.ex)+'”</p>';
+    const btn=document.createElement('button'); btn.className='btn mini primary'; btn.textContent='Use this ➜';
+    btn.onclick=()=>useGuarantee(x.ex);
+    card.appendChild(btn); gLibEl.appendChild(card);
+  });
+}
+function useGuarantee(text){
+  const t=document.getElementById('gText');
+  t.value=(t.value.trim()? t.value.trim()+'\n\n':'')+text;
+  data.guaranteeText=t.value; save(); toast('Added to your guarantee');
+}
+function clearGuarantee(){
+  const t=document.getElementById('gText'); t.value=''; data.guaranteeText=''; save();
+}
+
 /* ---------- magic name ---------- */
 function calcMagic(){
   const g=n=>((document.querySelector('[data-k="'+n+'"]')||{}).value||'').trim();
@@ -591,7 +690,7 @@ function buildSummary(){
   if(sv&&op) out+=`\nValue-to-price: ${(sv/op).toFixed(1)}×`;
 
   out+='\n\n'+h('🛡 GUARANTEE');
-  out+=`${g('guaranteeType')?'['+g('guaranteeType')+']\n':''}${g('guaranteeText')||'—'}`;
+  out+=`${g('guaranteeText')||'—'}`;
 
   out+='\n\n'+h('⏳ SCARCITY & URGENCY');
   const sc=(data.scarcity||[]);
@@ -626,6 +725,8 @@ renderProblems();
 renderSolutions();
 renderBonuses();
 renderScarcity();
+renderGFilter();
+renderGLib();
 calcValue();
 calcMagic();
 calcPrice();
